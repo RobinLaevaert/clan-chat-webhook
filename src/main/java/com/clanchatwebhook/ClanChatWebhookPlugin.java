@@ -188,7 +188,23 @@ public class ClanChatWebhookPlugin extends Plugin
 		newMessage = newMessage.replace((char)160, ' ');
 		newMessage = newMessage.replace("<lt>", "<");
 		newMessage = newMessage.replace("<gt>", ">");
+		newMessage = resolveTemplateTags(newMessage);
 		return additionalCustomizations(newMessage);
+	}
+
+	// Jagex broadcasts can define values like <str_quest_name_0=Name> and reference them as <str_quest_name_0>
+	static String resolveTemplateTags(String message)
+	{
+		java.util.regex.Matcher definition = java.util.regex.Pattern.compile("<(str_\\w+)=([^>]*)>").matcher(message);
+		java.util.Map<String, String> values = new java.util.HashMap<>();
+		while (definition.find()) {
+			values.put(definition.group(1), definition.group(2));
+		}
+		String newMessage = definition.replaceAll("");
+		for (java.util.Map.Entry<String, String> entry : values.entrySet()) {
+			newMessage = newMessage.replace("<" + entry.getKey() + ">", entry.getValue());
+		}
+		return newMessage;
 	}
 
 	private String additionalCustomizations(String message)
